@@ -6,6 +6,7 @@ on:
       - 'src/**'
       - 'Dockerfile'
       - 'charts/**'
+      - '.github/**'
     branches:
       - main
 
@@ -30,3 +31,9 @@ jobs:
       - name: Push Docker Latest Image
         run: docker push localhost:32000/phrase:latest
 
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Install/Upgrade helm chart
+        run: helm upgrade phrase ./charts/phrase --install --namespace phrase --create-namespace --set image.tag=${{ github.sha }}
