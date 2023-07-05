@@ -3,52 +3,65 @@
   hosts: all
   tasks:
     - name: Install Snapd
+      become: true
       apt:
         name: snapd
         state: present
     
     - name: Install tools
+      become: true
       snap:
         name: 
           - microk8s
           - docker
           - kubectl
+          - helm
         state: present
         classic: yes
+      ignore_errors: True
 
     - name: Disable HA addon
+      become: true
       command:
         cmd: microk8s disable ha-cluster --force
     
     - name: Enable DNS
+      become: true
       command:
         cmd: microk8s enable dns:1.1.1.1
 
     - name: Enable Metallb
+      become: true
       command:
         cmd: microk8s enable metallb:{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}/32
     
     - name: Enable Ingress
+      become: true
       command:
         cmd: microk8s enable ingress
 
     - name: Enable cert-manager
+      become: true
       command:
         cmd: microk8s enable cert-manager
 
     - name: Enable helm3
+      become: true
       command:
         cmd: microk8s enable helm3
 
     - name: Enable storage
+      become: true
       command:
         cmd: microk8s enable storage
 
     - name: Enable registry
+      become: true
       command:
         cmd: microk8s enable registry
 
     - name: Start microk8s
+      become: true
       command:
         cmd: microk8s start  
     
@@ -60,5 +73,21 @@
         group: ansible
 
     - name: Copy k8s config to the .kube/config
+      become: true
       shell: 
         cmd: microk8s.config | tee /home/ansible/.kube/config
+
+    - name: Install GitHub Actions self-host agent
+      when: install_github_agent is defined
+      shell: |
+        mkdir actions-runner && cd actions-runner && \
+        curl -o actions-runner-linux-x64-2.305.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.305.0/actions-runner-linux-x64-2.305.0.tar.gz && \
+        tar xzf ./actions-runner-linux-x64-2.305.0.tar.gz && \
+        ./config.sh ---unattended -url https://github.com/reisei/phrase-test-task --replace --name phrase-test-runner --token {{ github_token }} 
+
+    - name: Run GitHub Actions self-host agent
+      when: install_github_agent is defined
+      shell: |
+        cd actions_runner
+        ./svc.sh install
+        ./svc.sh start
