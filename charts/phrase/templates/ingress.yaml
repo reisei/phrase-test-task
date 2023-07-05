@@ -4,19 +4,19 @@ metadata:
   name: basic-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.org/server-snippet: |-
+    nginx.ingress.kubernetes.io/server-snippet: |-
       location /ready-for-deploy {
-        deny all;
+        return 403;
       }
       location /prepare-for-deploy {
-        deny all;
+        return 403;
       }
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /*
+      - path: /
         pathType: Prefix
         backend:
           service:
