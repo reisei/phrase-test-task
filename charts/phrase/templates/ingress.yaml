@@ -4,6 +4,8 @@ metadata:
   name: basic-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: test-ca-cluster-issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/server-snippet: |-
       location /ready-for-deploy {
         return 403;
@@ -14,15 +16,20 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: test-phrase.reisei.ru
+    http:
       paths:
-      - path: /
-        pathType: Prefix
-        backend:
+      - backend:
           service:
             name: phrase
             port:
               number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - test-phrase.reisei.ru
+    secretName: basic-ingress-cert
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -35,7 +42,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: test-phrase.reisei.ru
+    http:
       paths:
       - path: /admin
         pathType: Prefix
@@ -44,3 +52,7 @@ spec:
             name: phrase
             port:
               number: 80
+  tls:
+  - hosts:
+    - test-phrase.reisei.ru
+    secretName: basic-ingress-cert
