@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'src/**'
+      - 'Dockerfile'
+      - 'charts/**'
     branches:
       - main
 
@@ -18,7 +20,13 @@ jobs:
       - name: Build Docker Image
         run: docker build -t localhost:32000/phrase:${{ github.sha }} .
 
+      - name: Tag as the latest
+        run: docker tag localhost:32000/phrase:${{ github.sha }} localhost:32000/phrase:latest
 
-      - name: Push Docker Image
+
+      - name: Push Docker Image w Version
         run: docker push localhost:32000/phrase:${{ github.sha }}
+
+      - name: Push Docker Latest Image
+        run: docker push localhost:32000/phrase:latest
 
