@@ -1,0 +1,64 @@
+---
+- name: Install and setup microk8s
+  hosts: all
+  tasks:
+    - name: Install Snapd
+      apt:
+        name: snapd
+        state: present
+    
+    - name: Install tools
+      snap:
+        name: 
+          - microk8s
+          - docker
+          - kubectl
+        state: present
+        classic: yes
+
+    - name: Disable HA addon
+      command:
+        cmd: microk8s disable ha-cluster --force
+    
+    - name: Enable DNS
+      command:
+        cmd: microk8s enable dns:1.1.1.1
+
+    - name: Enable Metallb
+      command:
+        cmd: microk8s enable metallb:{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}/32
+    
+    - name: Enable Ingress
+      command:
+        cmd: microk8s enable ingress
+
+    - name: Enable cert-manager
+      command:
+        cmd: microk8s enable cert-manager
+
+    - name: Enable helm3
+      command:
+        cmd: microk8s enable helm3
+
+    - name: Enable storage
+      command:
+        cmd: microk8s enable storage
+
+    - name: Enable registry
+      command:
+        cmd: microk8s enable registry
+
+    - name: Start microk8s
+      command:
+        cmd: microk8s start  
+    
+    - name: Create .kube directory
+      file:
+        path: /home/ansible/.kube
+        state: directory
+        owner: ansible
+        group: ansible
+
+    - name: Copy k8s config to the .kube/config
+      shell: 
+        cmd: microk8s.config | tee /home/ansible/.kube/config
