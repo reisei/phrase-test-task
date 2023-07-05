@@ -87,6 +87,7 @@
 
     - name: Run GitHub Actions self-host agent
       when: install_github_agent is defined
+      become: true
       shell: |
         cd actions_runner
         ./svc.sh install

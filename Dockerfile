@@ -4,8 +4,10 @@ RUN apt update && apt upgrade -y
 
 WORKDIR /app
 
-COPY src/ .
+COPY src/requirements.txt .
 
 RUN pip install -r requirements.txt
+
+COPY src/* .
 
 CMD ["python", "app.py"]
