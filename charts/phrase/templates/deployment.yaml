@@ -5,9 +5,7 @@ metadata:
   labels:
     {{- include "phrase.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "phrase.selectorLabels" . | nindent 6 }}
@@ -24,26 +22,40 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "phrase.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-db-init
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "create_db.py"]
+          env:
+          - name: APP_PORT
+            value: "80"
+          - name: REDIS_HOST
+            value: phrase-redis-master
+          - name: DATABASE_URI
+            value: postgresql+psycopg2://phrase:qwerty@phrase-postgresql:5432/phrase
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: APP_PORT
+            value: "80"
+          - name: REDIS_HOST
+            value: phrase-redis-master
+          - name: DATABASE_URI
+            value: postgresql+psycopg2://phrase:qwerty@phrase-postgresql:5432/phrase
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /status
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /status
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

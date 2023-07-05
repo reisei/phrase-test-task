@@ -37,3 +37,13 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+
+redis:
+  architecture: standalone
+
+postgresql:
+  auth:
+    username: phrase
+    password: qwerty
+    database: phrase
