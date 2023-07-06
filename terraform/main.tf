@@ -30,8 +30,9 @@ resource "hcloud_server" "phrase_test" {
   datacenter = "nbg1-dc3"
   ssh_keys    = [hcloud_ssh_key.default.id]
   user_data   = templatefile("user_data.tpl", {
-    devops_ssh_key = hcloud_ssh_key.default.public_key
     ansible_ssh_key = hcloud_ssh_key.default.public_key
+    admin_ssh_key = file("~/.ssh/phrase_admin.pub")
+    user_ssh_key = file("~/.ssh/phrase_user.pub")
   })
   labels = {
     "app" : "phrase"
